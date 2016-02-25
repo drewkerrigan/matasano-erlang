@@ -8,7 +8,7 @@
 
 score(String) ->
     U = string:to_upper(String),
-    Words = string:tokens(U, "., "),
+    Words = string:tokens(U, "'., "),
     S0 = score_words(Words),
     S1 = score_letters(lists:flatten(Words)),
     round(S0 + S1).
