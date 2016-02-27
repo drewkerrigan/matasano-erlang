@@ -52,6 +52,18 @@ s1_c7(Filename) ->
     Data = base64:decode(Base64),
     crypto_util:aes_128_ecb_decrypt(Data, "YELLOW SUBMARINE").
 
+s1_c8(Filename) ->
+    Lines = crypto_util:file_as_lines(Filename),
+    lists:foldl(fun(X, Accum) ->
+                        Entry1 = string:strip(X, both, $\n),
+                        Unhex = mochihex:to_bin(Entry1),
+                        UnhexStr = binary_to_list(Unhex),
+                        case crypto_util:is_aes_128_ecb(UnhexStr) of
+                            true -> {true, X};
+                            _ -> Accum
+                        end
+                end, {0,0,""}, Lines).
+
 
 %%%===================================================================
 %%% Tests
@@ -94,6 +106,11 @@ s1_c6_test() ->
 s1_c7_test() ->
     E = ?MUSIC,
     R = s1_c7("../priv/s1_c7.txt"),
+    ?assertEqual(E,R).
+
+s1_c8_test() ->
+    E = {true, "d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a\n"},
+    R = s1_c8("../priv/s1_c8.txt"),
     ?assertEqual(E,R).
 
 -endif.

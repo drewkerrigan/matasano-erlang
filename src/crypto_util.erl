@@ -6,6 +6,20 @@
 %%% API
 %%%===================================================================
 
+is_aes_128_ecb(Data) when is_binary(Data) ->
+    is_aes_128_ecb(Data, []);
+is_aes_128_ecb(Data) when is_list(Data) ->
+    is_aes_128_ecb(list_to_binary(Data), []).
+
+
+is_aes_128_ecb(<<"">>, _) ->
+    false;
+is_aes_128_ecb(<<Block:128, Rest/binary>>, Accum) ->
+    case lists:member(Block, Accum) of
+        true -> true;
+        _ -> is_aes_128_ecb(Rest, [Block|Accum])
+    end.
+
 aes_128_ecb_decrypt(Data, Key) when is_binary(Data) ->
     aes_128_ecb_decrypt(Data, Key, []);
 aes_128_ecb_decrypt(Data, Key) when is_list(Data) ->
