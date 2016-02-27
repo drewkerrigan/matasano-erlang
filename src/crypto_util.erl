@@ -2,11 +2,29 @@
 
 -compile(export_all).
 
--include_lib("eunit/include/eunit.hrl").
-
 %%%===================================================================
 %%% API
 %%%===================================================================
+
+aes_128_ecb_decrypt(Data, Key) when is_binary(Data) ->
+    aes_128_ecb_decrypt(Data, Key, []);
+aes_128_ecb_decrypt(Data, Key) when is_list(Data) ->
+    aes_128_ecb_decrypt(list_to_binary(Data), Key, []).
+
+aes_128_ecb_decrypt(<<"">>, _, Accum) ->
+    Answer = binary_to_list(list_to_binary(lists:reverse(Accum))),
+    %% Remove the [4,4,4,4] of padding, not sure if always necessary
+    lists:sublist(Answer, length(Answer) - 4);
+aes_128_ecb_decrypt(Data, Key, Accum) ->
+    {Decrypted, Rest} = case size(Data) of
+        S when S < 16 ->
+            Bitsize = S*8,
+            {crypto:block_decrypt(aes_ecb, Key, <<Data:Bitsize>>), <<"">>};
+        _ ->
+            <<Block:128, R/binary>> = Data,
+            {crypto:block_decrypt(aes_ecb, Key, <<Block:128>>), R}
+    end,
+    aes_128_ecb_decrypt(Rest, Key, [Decrypted|Accum]).
 
 decrypt_single_xors(Data) ->
     lists:foldl(fun(X, {C,Sc,St}) ->
@@ -151,6 +169,7 @@ symmetric_xors([I1|R1], [I2|R2], Acc) ->
 
 
 -ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
 hamming_distance_test() ->
     E = 37,
