@@ -6,6 +6,11 @@
 %%% API
 %%%===================================================================
 
+pkcs7_pad(Block, Length) when is_binary(Block) ->
+    pkcs7_pad(binary_to_list(Block), Length);
+pkcs7_pad(Block, Length) when is_list(Block) ->
+    Block ++ lists:duplicate(Length - length(Block),4).
+
 is_aes_128_ecb(Data) when is_binary(Data) ->
     is_aes_128_ecb(Data, []);
 is_aes_128_ecb(Data) when is_list(Data) ->

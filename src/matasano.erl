@@ -64,6 +64,9 @@ s1_c8(Filename) ->
                         end
                 end, {0,0,""}, Lines).
 
+s2_c9(Block, Length) ->
+    crypto_util:pkcs7_pad(Block, Length).
+
 
 %%%===================================================================
 %%% Tests
@@ -113,4 +116,8 @@ s1_c8_test() ->
     R = s1_c8("../priv/s1_c8.txt"),
     ?assertEqual(E,R).
 
+s2_c9_test() ->
+    E = "YELLOW SUBMARINE\x04\x04\x04\x04",
+    R = s2_c9("YELLOW SUBMARINE", 20),
+    ?assertEqual(E,R).
 -endif.
