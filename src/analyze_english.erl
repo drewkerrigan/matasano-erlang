@@ -1,17 +1,29 @@
 -module(analyze_english).
 
--export([score/1]).
+-export([simple_score/1, score/1, score/2]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-score(String) ->
+simple_score(String) ->
     U = string:to_upper(String),
-    Words = string:tokens(U, "'., "),
-    S0 = score_words(Words),
-    S1 = score_letters(lists:flatten(Words)),
-    round(S0 + S1).
+    lists:foldl(fun(X, Sum) -> simple_letter_score([X]) + Sum end, 0, U).
+
+score(String) ->
+    score(String, 0.7).
+
+score(String, Threshold) ->
+    U = string:to_upper(String),
+    NumLetters = lists:foldl(fun(X, Sum) -> any_letter([X]) + Sum end, 0, U),
+    case (NumLetters / length(String)) of
+        X when X >= Threshold ->
+            Words = string:tokens(U, "'., "),
+            S0 = score_words(Words),
+            S1 = score_letters(lists:flatten(Words)),
+            round(S0 + S1);
+        _ -> 0
+    end.
 
 %%%===================================================================
 %%% Internal functions
@@ -81,6 +93,21 @@ score_word(Word) ->
          end,
     S0 + S1.
 
+any_letter([L]) ->
+    case lists:member(L, "ABCDEFGHIJKLMNOPQRSTUVWXYZ ") of
+        true ->
+            1;
+        _ ->
+            0
+    end.
+
+simple_letter_score([L]) ->
+    case lists:member(L, "ETAOIN SHRDLU") of
+        true ->
+            1;
+        _ ->
+            0
+    end.
 
 letter_percentage("E") -> 1.0;
 letter_percentage("T") -> 9.25 / 12.51;
@@ -274,7 +301,8 @@ common_word(Word) ->
 -include_lib("eunit/include/eunit.hrl").
 
 score_test() ->
+    ?assertEqual(21, simple_score("hello there, how are you.")),
     ?assertEqual(41, score("hello there, how are you.")),
-    ?assertEqual(7, score("lk23j4523h523h5234h6234kh6lk;asdfa")).
+    ?assertEqual(0, score("lk23j4523h523h5234h6234kh6lk;asdfa")).
 
 -endif.
