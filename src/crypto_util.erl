@@ -9,7 +9,7 @@
 pkcs7_pad(Block, Length) when is_binary(Block) ->
     pkcs7_pad(binary_to_list(Block), Length);
 pkcs7_pad(Block, Length) when is_list(Block) ->
-    Block ++ lists:duplicate(Length - length(Block),4).
+    Block ++ lists:duplicate(Length - length(Block),Length - length(Block)).
 
 is_aes_128_ecb(Data) when is_binary(Data) ->
     is_aes_128_ecb(Data, []);
@@ -24,6 +24,26 @@ is_aes_128_ecb(<<Block:128, Rest/binary>>, Accum) ->
         true -> true;
         _ -> is_aes_128_ecb(Rest, [Block|Accum])
     end.
+
+aes_128_ecb_encrypt(Data, Key) when is_binary(Data) ->
+    aes_128_ecb_decrypt(Data, Key, []);
+aes_128_ecb_encrypt(Data, Key) when is_list(Data) ->
+    aes_128_ecb_decrypt(list_to_binary(Data), Key, []).
+
+aes_128_ecb_encrypt(<<"">>, _, Accum) ->
+    Answer = binary_to_list(list_to_binary(lists:reverse(Accum))),
+    %% Remove the [4,4,4,4] of padding, not sure if always necessary
+    lists:sublist(Answer, length(Answer) - 4);
+aes_128_ecb_encrypt(Data, Key, Accum) ->
+    {Decrypted, Rest} = case size(Data) of
+        S when S < 16 ->
+            Bitsize = S*8,
+            {crypto:block_encrypt(aes_ecb, Key, <<Data:Bitsize>>), <<"">>};
+        _ ->
+            <<Block:128, R/binary>> = Data,
+            {crypto:block_encrypt(aes_ecb, Key, <<Block:128>>), R}
+    end,
+    aes_128_ecb_encrypt(Rest, Key, [Decrypted|Accum]).
 
 aes_128_ecb_decrypt(Data, Key) when is_binary(Data) ->
     aes_128_ecb_decrypt(Data, Key, []);

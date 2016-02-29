@@ -120,4 +120,9 @@ s2_c9_test() ->
     E = "YELLOW SUBMARINE\x04\x04\x04\x04",
     R = s2_c9("YELLOW SUBMARINE", 20),
     ?assertEqual(E,R).
+
+s2_c10_test() ->
+    E = "_",
+    R = s2_c10("../priv/s1_c7.txt", "YELLOW SUBMARINE", "\x00\x00\x00 &c"),
+    ?assertEqual(E,R).
 -endif.
